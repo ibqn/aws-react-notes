@@ -1,6 +1,8 @@
 import { useEffect, useReducer } from 'react'
 import { API } from 'aws-amplify'
-import { listNotes } from './graphql/queries'
+import { listNotes as LIST_NOTES } from './graphql/queries'
+import styled from 'styled-components'
+import { List } from 'antd'
 
 const initialState = {
   notes: [],
@@ -20,13 +22,21 @@ const reducer = (state, action) => {
   }
 }
 
+const ListItem = styled(List.Item)`
+  text-align: left;
+`
+
+const Container = styled.div`
+  padding: 20px;
+`
+
 const App = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const notesData = await API.graphql({ query: listNotes })
+        const notesData = await API.graphql({ query: LIST_NOTES })
 
         dispatch({ type: 'SET_NOTES', notes: notesData.data.listNotes.items })
       } catch (error) {
@@ -40,13 +50,29 @@ const App = () => {
     fetchNotes()
   }, [])
 
+  const renderItem = (item) => (
+    <ListItem>
+      <List.Item.Meta
+        title={item.name}
+        description={item.description}
+      ></List.Item.Meta>
+    </ListItem>
+  )
+
   return (
     <>
       <div>app</div>
-      {JSON.stringify(state)}
+      {/* {JSON.stringify(state)} */}
       {state?.notes?.map((note) => (
         <p key={note.id}>{note.name}</p>
       ))}
+      <Container>
+        <List
+          loading={state.loading}
+          dataSource={state.notes}
+          renderItem={renderItem}
+        ></List>
+      </Container>
     </>
   )
 }
