@@ -88,14 +88,28 @@ const App = () => {
         <Form>
           <fieldset>
             <FormBlock>
-              <Label htmlFor="name">Name</Label>
-              <Field name="name" as={InputField} />
+              <Label htmlFor="name">
+                Name
+                <Field
+                  name="name"
+                  id="name"
+                  placeholder="note's name"
+                  as={InputField}
+                />
+              </Label>
               <ErrorMessage name="name" component={ErrorField} />
             </FormBlock>
 
             <FormBlock>
-              <Label htmlFor="description">Description</Label>
-              <Field name="description" as={InputField} />
+              <Label htmlFor="description">
+                Description
+                <Field
+                  name="description"
+                  id="description"
+                  placeholder="note's description"
+                  as={InputField}
+                />
+              </Label>
               <ErrorMessage name="description" component={ErrorField} />
             </FormBlock>
 
