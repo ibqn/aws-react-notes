@@ -1,7 +1,10 @@
 import { useEffect, useReducer } from 'react'
 import { API } from 'aws-amplify'
 import { listNotes as LIST_NOTES } from './graphql/queries'
-import { createNote as CREATE_NOTE } from './graphql/mutations'
+import {
+  createNote as CREATE_NOTE,
+  deleteNote as DELETE_NOTE,
+} from './graphql/mutations'
 import styled from 'styled-components'
 import { List, Button, Input } from 'antd'
 import { v4 as uuid } from 'uuid'
@@ -52,6 +55,11 @@ const ErrorField = styled.span`
   color: coral;
 `
 
+const P = styled.p`
+  color: #1890ff;
+  cursor: pointer;
+`
+
 const App = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
@@ -91,8 +99,21 @@ const App = () => {
     dispatch({ type: 'ADD_NOTE', note })
   }
 
+  const deleteNote = async ({ id }) => {
+    const notes = state.notes.filter((note) => note.id !== id)
+
+    try {
+      await API.graphql({ query: DELETE_NOTE, variables: { input: { id } } })
+      console.log('successfully deleted note')
+    } catch (error) {
+      console.log('error: ', error)
+    }
+
+    dispatch({ type: 'SET_NOTES', notes })
+  }
+
   const renderItem = (item) => (
-    <ListItem>
+    <ListItem actions={[<P onClick={() => deleteNote(item)}>Delete</P>]}>
       <List.Item.Meta
         title={item.name}
         description={item.description}
@@ -123,7 +144,7 @@ const App = () => {
                 <Field
                   name="name"
                   id="name"
-                  placeholder="note's name"
+                  placeholder="Note name"
                   as={InputField}
                 />
               </Label>
@@ -136,7 +157,7 @@ const App = () => {
                 <Field
                   name="description"
                   id="description"
-                  placeholder="note's description"
+                  placeholder="Note description"
                   as={InputField}
                 />
               </Label>
