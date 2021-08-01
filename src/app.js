@@ -1,16 +1,19 @@
 import { useEffect, useReducer } from 'react'
 import { API } from 'aws-amplify'
 import { listNotes as LIST_NOTES } from './graphql/queries'
+import { createNote as CREATE_NOTE } from './graphql/mutations'
 import styled from 'styled-components'
 import { List, Button, Input } from 'antd'
+import { v4 as uuid } from 'uuid'
 import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
+
+const CLIENT_ID = uuid()
 
 const initialState = {
   notes: [],
   loading: true,
   error: false,
-  form: { name: '', description: '' },
 }
 
 const reducer = (state, action) => {
@@ -19,6 +22,9 @@ const reducer = (state, action) => {
       return { ...state, notes: action.notes, loading: false }
     case 'ERROR':
       return { ...state, loading: false, error: true }
+    case 'ADD_NOTE':
+      return { ...state, notes: [action.note, ...state.notes] }
+
     default:
       return state
   }
@@ -61,10 +67,29 @@ const App = () => {
       }
     }
 
-    const notes = [{ id: 'foo', name: 'Hi there!' }]
+    const notes = [{ id: uuid(), name: 'Hi there!' }]
     dispatch({ type: 'SET_NOTES', notes })
+
     fetchNotes()
   }, [])
+
+  const createNote = async (noteData) => {
+    const note = {
+      ...noteData,
+      clientId: CLIENT_ID,
+      completed: false,
+      id: uuid(),
+    }
+
+    try {
+      await API.graphql({ query: CREATE_NOTE, variables: { input: note } })
+      console.log('successfully created note')
+    } catch (error) {
+      console.log('error: ', error)
+    }
+
+    dispatch({ type: 'ADD_NOTE', note })
+  }
 
   const renderItem = (item) => (
     <ListItem>
@@ -83,7 +108,12 @@ const App = () => {
           name: Yup.string().required('name is required'),
           description: Yup.string().required('description is required'),
         })}
-        onSubmit={(values) => console.log(values)}
+        onSubmit={async (noteData, { resetForm }) => {
+          console.log(noteData)
+
+          await createNote(noteData)
+          resetForm()
+        }}
       >
         <Form>
           <fieldset>
