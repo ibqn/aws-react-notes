@@ -13,3 +13,7 @@ project was initialized with `amplify cli`
 ```shell
 amplify init
 ```
+
+## Screenshot
+
+![notes app](screenshot.png)
