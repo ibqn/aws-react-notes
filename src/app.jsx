@@ -4,6 +4,7 @@ import { listNotes as LIST_NOTES } from './graphql/queries'
 import {
   createNote as CREATE_NOTE,
   deleteNote as DELETE_NOTE,
+  updateNote as UPDATE_NOTE,
 } from './graphql/mutations'
 import styled from 'styled-components'
 import { List, Button, Input } from 'antd'
@@ -90,7 +91,12 @@ const App = () => {
     }
 
     try {
-      await API.graphql({ query: CREATE_NOTE, variables: { input: note } })
+      await API.graphql({
+        query: CREATE_NOTE,
+        variables: {
+          input: note,
+        },
+      })
       console.log('successfully created note')
     } catch (error) {
       console.log('error: ', error)
@@ -103,7 +109,12 @@ const App = () => {
     const notes = state.notes.filter((note) => note.id !== id)
 
     try {
-      await API.graphql({ query: DELETE_NOTE, variables: { input: { id } } })
+      await API.graphql({
+        query: DELETE_NOTE,
+        variables: {
+          input: { id },
+        },
+      })
       console.log('successfully deleted note')
     } catch (error) {
       console.log('error: ', error)
@@ -112,8 +123,41 @@ const App = () => {
     dispatch({ type: 'SET_NOTES', notes })
   }
 
+  const updateNote = async ({ id }) => {
+    let completed = undefined
+
+    const notes = state.notes.map((note) => {
+      if (note.id === id) {
+        completed = !note.completed
+        return { ...note, completed }
+      }
+      return note
+    })
+
+    try {
+      await API.graphql({
+        query: UPDATE_NOTE,
+        variables: {
+          input: { id, completed },
+        },
+      })
+      console.log('successfully updated note')
+    } catch (error) {
+      console.log('error: ', error)
+    }
+
+    dispatch({ type: 'SET_NOTES', notes })
+  }
+
   const renderItem = (item) => (
-    <ListItem actions={[<P onClick={() => deleteNote(item)}>Delete</P>]}>
+    <ListItem
+      actions={[
+        <P onClick={() => deleteNote(item)}>Delete</P>,
+        <P onClick={() => updateNote(item)}>
+          {item.completed ? 'completed' : 'mark completed'}
+        </P>,
+      ]}
+    >
       <List.Item.Meta
         title={item.name}
         description={item.description}
